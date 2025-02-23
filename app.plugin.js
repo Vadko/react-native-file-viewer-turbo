@@ -1,3 +1,5 @@
-const { withFilePreviewTurbo } = require('./lib/commonjs/expo');
+const {
+  withFilePreviewTurbo,
+} = require('./lib/commonjs/plugin/withFilePreviewTurbo');
 
 module.exports = withFilePreviewTurbo;

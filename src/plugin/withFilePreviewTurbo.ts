@@ -14,14 +14,10 @@ export const withFilePreviewTurbo: Expo.ConfigPlugin<Props> = (
   const withAndroidManifest: Expo.ConfigPlugin<Props> = (config) =>
     Expo.withAndroidManifest(config, (config) => {
       config.modResults.manifest.queries.push({
-        intent: [
-          {
-            action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
-            data: props.mimeTypes.map((mimeType) => ({
-              $: { 'android:mimeType': mimeType },
-            })),
-          },
-        ],
+        intent: props.mimeTypes.map((mimeType) => ({
+          action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
+          data: [{ $: { 'android:mimeType': mimeType } }],
+        })),
       });
 
       return config;
