@@ -6,6 +6,9 @@ This native file viewer for React Native utilizes the QuickLook Framework on iOS
 
 While most of the code remains the same as the original library, I implemented several changes to enhance the overall UI/UX and ensure proper handling of asynchronous logic by using promises instead of EventEmitters where applicable.
 
+## Compatibility
+This library requires React Native 0.76.3 or newer. It is compatible with Expo SDK 52 or newer.
+
 ## Expo
 
 ### Installation
