@@ -7,7 +7,6 @@
 
 #else
 #import <React/RCTBridgeModule.h>
-#import <React/RCTEventEmitter.h>
 
 @interface FileViewerTurbo: RCTEventEmitter <RCTBridgeModule, NSURLSessionTaskDelegate>
 #endif
