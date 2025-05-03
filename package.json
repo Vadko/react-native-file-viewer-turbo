@@ -4,11 +4,19 @@
   "description": "Native file viewer for react-native - now with TurboModules support",
   "source": "./src/index.tsx",
   "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/module/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
+      "import": {
+        "types": "./lib/typescript/module/src/index.d.ts",
+        "default": "./lib/module/index.js"
+      }
+    },
+    "./app.plugin.js": {
+      "require": {
+        "default": "./app.plugin.js"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -161,6 +169,7 @@
     "source": "src",
     "output": "lib",
     "targets": [
+      "commonjs",
       [
         "module",
         {
