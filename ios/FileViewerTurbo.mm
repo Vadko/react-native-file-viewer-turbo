@@ -82,15 +82,6 @@ static NSNumber *invocationId = @33341;
     return NO;
 }
 
--(id) init {
-  self = [super init];
-  if (self) {
-    #ifndef RCT_NEW_ARCH_ENABLED
-        staticEventEmitter = self;
-    #endif
-  }
-  return self;
-}
 
 - (dispatch_queue_t)methodQueue
 {
@@ -128,17 +119,12 @@ static NSNumber *invocationId = @33341;
 
 
 
-- (void)_sendEventWithName:(NSString *)eventName body:(id)body {
-  #ifdef RCT_NEW_ARCH_ENABLED
-    if ([eventName isEqualToString:@"onViewerDidDismiss"]) {
-      [self emitOnViewerDidDismiss];
+- (void)sendEventWithName:(NSString * _Nonnull)name result:(NSDictionary<NSString *,NSString *> * _Nonnull)result {
+    if (hasListeners) {
+        [self sendEventWithName:name body:result];
     }
-  #else
-    if (hasListeners && staticEventEmitter != nil) {
-      [self sendEventWithName:eventName body:body];
-    }
-  #endif
 }
+
 
 - (NSArray<NSString *> *)supportedEvents {
     return @[
@@ -148,13 +134,13 @@ static NSNumber *invocationId = @33341;
 
 
 - (void)previewControllerDidDismiss:(CustomQLViewController *)controller {
-  [self _sendEventWithName:@"onViewerDidDismiss" body:nil];
+  [self sendEventWithName:@"onViewerDidDismiss" body:nil];
 }
 
 
 - (void)dismissView:(id)sender {
     UIViewController* controller = [FileViewerTurbo topViewController];
-    [self _sendEventWithName:@"onViewerDidDismiss" body:nil];
+//    [self sendEventWithName:@"onViewerDidDismiss" body:nil];
     [[FileViewerTurbo topViewController] dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -167,7 +153,7 @@ RCT_EXPORT_METHOD(open:(NSString *)path
 
       NSString *displayName = options[@"displayName"];
       NSString *doneButtonTitle = options[@"doneButtonTitle"];
-  
+
       File *file = [[File alloc] initWithPath:path title:displayName];
 
       QLPreviewController *controller = [[CustomQLViewController alloc] initWithFile:file identifier:invocationId];
@@ -178,14 +164,14 @@ RCT_EXPORT_METHOD(open:(NSString *)path
       }
 
       UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
-  
+
       if (doneButtonTitle) {
         controller.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
       } else {
         controller.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissView:)];
 
       }
- 
+
       if ([QLPreviewController canPreviewItem:file]) {
         [[FileViewerTurbo topViewController] presentViewController:navigationController animated:YES completion:^{
           resolve(nil);
