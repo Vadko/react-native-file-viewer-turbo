@@ -7,6 +7,7 @@ export type Options = {
   doneButtonTitle?: string;
   showOpenWithDialog?: boolean;
   showAppsSuggestions?: boolean;
+  doneButtonPosition?: 'left' | 'right';
 };
 
 export interface Spec extends TurboModule {

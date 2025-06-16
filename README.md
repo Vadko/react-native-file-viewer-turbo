@@ -80,13 +80,14 @@ For example, if you know upfront that your app is supposed to open PDF files, th
 
 #### Options
 
-| Parameter                          | Type    | Platform     | Description                                                                                        |
-|------------------------------------|---------|--------------|----------------------------------------------------------------------------------------------------|
-| **displayName** (optional)         | string  | iOS          | Customize the QuickLook title                                                                      |
-| **doneButtonTitle** (optional)     | string  | iOS          | Customize UINavigationController Done button title                                                 |
-| **onDismiss** (optional)           | function | iOS, Android | Callback invoked when the viewer is being dismissed                                                |
-| **showOpenWithDialog** (optional)  | boolean | Android      | If there is more than one app that can open the file, show an _Open With_ dialogue box             |
-| **showAppsSuggestions** (optional) | boolean | Android      | If there is not an installed app that can open the file, open the Play Store with suggested apps   |
+| Parameter                         | Type          | Platform     | Description                                                                                      |
+|-----------------------------------|---------------|--------------|--------------------------------------------------------------------------------------------------|
+| **displayName** (optional)        | string        | iOS          | Customize the QuickLook title                                                                    |
+| **doneButtonTitle** (optional)    | string        | iOS          | Customize UINavigationController Done button title                                               |
+| **doneButtonPosition** (optional) | left \| right | iOS          | Customize UINavigationController Done button position                                            |
+| **onDismiss** (optional)          | function      | iOS, Android | Callback invoked when the viewer is being dismissed                                              |
+| **showOpenWithDialog** (optional) | boolean       | Android      | If there is more than one app that can open the file, show an _Open With_ dialogue box           |
+| **showAppsSuggestions** (optional) | boolean       | Android      | If there is not an installed app that can open the file, open the Play Store with suggested apps |
 
 **IMPORTANT**: Try to be as granular as possible when defining your own queries. This might affect your Play Store approval, as mentioned in [Package visibility filtering on Android](https://developer.android.com/training/package-visibility).
 

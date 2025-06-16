@@ -32,6 +32,7 @@ export default function App() {
       open(localFile, {
         onDismiss: () => console.log('dismissed!'),
         doneButtonTitle: 'Custom done',
+        doneButtonPosition: 'right',
       })
         .then(console.log)
         .catch(console.error)
