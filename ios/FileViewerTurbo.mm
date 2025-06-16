@@ -151,8 +151,10 @@ RCT_EXPORT_METHOD(open:(NSString *)path
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
 
+      UIBarButtonItem *buttonItem;
       NSString *displayName = options[@"displayName"];
       NSString *doneButtonTitle = options[@"doneButtonTitle"];
+      NSString *doneButtonPosition = options[@"doneButtonPosition"];
 
       File *file = [[File alloc] initWithPath:path title:displayName];
 
@@ -164,12 +166,19 @@ RCT_EXPORT_METHOD(open:(NSString *)path
       }
 
       UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
-
+    
       if (doneButtonTitle) {
-        controller.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
+        buttonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
       } else {
-        controller.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissView:)];
-
+        buttonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissView:)];
+      }
+  
+      if ([doneButtonPosition isEqualToString: @"left"]) {
+        controller.navigationItem.leftBarButtonItem = buttonItem;
+      } else if ([doneButtonPosition isEqualToString: @"right"]) {
+        controller.navigationItem.rightBarButtonItem = buttonItem;
+      } else {
+        controller.navigationItem.leftBarButtonItem = buttonItem;
       }
 
       if ([QLPreviewController canPreviewItem:file]) {
