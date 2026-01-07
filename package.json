@@ -3,7 +3,7 @@
   "version": "0.7.2",
   "description": "Native file viewer for react-native - now with TurboModules support",
   "source": "./src/index.tsx",
-  "main": "./lib/module/index.js",
+  "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "types": "./lib/typescript/module/src/index.d.ts",
   "exports": {
