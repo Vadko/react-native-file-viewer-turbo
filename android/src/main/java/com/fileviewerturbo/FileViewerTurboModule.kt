@@ -10,7 +10,6 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 
 @ReactModule(name = FileViewerTurboModule.NAME)
@@ -21,15 +20,13 @@ class FileViewerTurboModule(reactContext: ReactApplicationContext) :
     const val NAME = "FileViewerTurbo"
     private const val SHOW_OPEN_WITH_DIALOG = "showOpenWithDialog"
     private const val SHOW_STORE_SUGGESTIONS = "showAppsSuggestions"
-    private const val DISMISS_EVENT = "onViewerDidDismiss"
     private const val RN_FILE_VIEWER_REQUEST = 33341
   }
 
   init {
     val activityEventListener: ActivityEventListener = object : BaseActivityEventListener() {
       override fun onActivityResult(activity: android.app.Activity, requestCode: Int, resultCode: Int, intent: Intent?) {
-        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-          .emit(DISMISS_EVENT, null)
+        emitOnViewerDidDismiss()
       }
     }
     reactContext.addActivityEventListener(activityEventListener)
@@ -121,11 +118,4 @@ class FileViewerTurboModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  override fun addListener(eventType: String?) {
-    // Required for RN event emitter
-  }
-
-  override fun removeListeners(count: Double) {
-    // Required for RN event emitter
-  }
 }

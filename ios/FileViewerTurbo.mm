@@ -1,11 +1,8 @@
 #import "FileViewerTurbo.h"
 
 #import <QuickLook/QuickLook.h>
-#import <React/RCTEventEmitter.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #import <RNFileViewerTurboSpec/RNFileViewerTurboSpec.h>
-#endif
 
 @interface File: NSObject<QLPreviewItem>
 
@@ -63,25 +60,13 @@
 
 @end
 
-@implementation FileViewerTurbo {
-  bool hasListeners;
-}
+@implementation FileViewerTurbo
 
-static RCTEventEmitter *staticEventEmitter = nil;
 static NSNumber *invocationId = @33341;
-
--(void)startObserving {
-    hasListeners = YES;
-}
-
--(void)stopObserving {
-    hasListeners = NO;
-}
 
 + (BOOL)requiresMainQueueSetup {
     return NO;
 }
-
 
 - (dispatch_queue_t)methodQueue
 {
@@ -117,44 +102,25 @@ static NSNumber *invocationId = @33341;
     return viewController;
 }
 
-
-
-- (void)sendEventWithName:(NSString * _Nonnull)name result:(NSDictionary<NSString *,NSString *> * _Nonnull)result {
-    if (hasListeners) {
-        [self sendEventWithName:name body:result];
-    }
-}
-
-
-- (NSArray<NSString *> *)supportedEvents {
-    return @[
-        @"onViewerDidDismiss"
-    ];
-}
-
-
 - (void)previewControllerDidDismiss:(CustomQLViewController *)controller {
-  [self sendEventWithName:@"onViewerDidDismiss" body:nil];
+    [self emitOnViewerDidDismiss];
 }
-
 
 - (void)dismissView:(id)sender {
-    UIViewController* controller = [FileViewerTurbo topViewController];
-//    [self sendEventWithName:@"onViewerDidDismiss" body:nil];
     [[FileViewerTurbo topViewController] dismissViewControllerAnimated:YES completion:nil];
 }
 
 RCT_EXPORT_MODULE(FileViewerTurbo)
 
 RCT_EXPORT_METHOD(open:(NSString *)path
-                  options:(NSDictionary *)options
+                  options:(JS::NativeFileViewerTurbo::Options &)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
 
       UIBarButtonItem *buttonItem;
-      NSString *displayName = options[@"displayName"];
-      NSString *doneButtonTitle = options[@"doneButtonTitle"];
-      NSString *doneButtonPosition = options[@"doneButtonPosition"];
+      NSString *displayName = options.displayName();
+      NSString *doneButtonTitle = options.doneButtonTitle();
+      NSString *doneButtonPosition = options.doneButtonPosition();
 
       File *file = [[File alloc] initWithPath:path title:displayName];
 
@@ -190,12 +156,10 @@ RCT_EXPORT_METHOD(open:(NSString *)path
       }
 };
 
-#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
     return std::make_shared<facebook::react::NativeFileViewerTurboSpecJSI>(params);
 }
-#endif
 
 @end

@@ -1,42 +1,20 @@
-import type { Options } from './NativeFileViewerTurbo';
+import FileViewerTurbo, { type Options } from './NativeFileViewerTurbo';
+import type { EventSubscription } from 'react-native';
 
-import {
-  NativeModules,
-  NativeEventEmitter,
-  type EmitterSubscription,
-} from 'react-native';
-import { createRef, type MutableRefObject } from 'react';
-
-// @ts-expect-error
-const isTurboModuleEnabled = global.__turboModuleProxy != null;
-
-const FileViewerTurbo = isTurboModuleEnabled
-  ? require('./NativeFileViewerTurbo').default
-  : NativeModules.FileViewerTurbo;
-
-const eventEmitter = new NativeEventEmitter(FileViewerTurbo);
-
-const dismissListener: MutableRefObject<EmitterSubscription | null> =
-  createRef();
+let dismissListener: EventSubscription | null = null;
 
 export async function open(
   path: string,
   options: Partial<Options & { onDismiss: () => void }> = {}
 ) {
   const { onDismiss, ...nativeOptions } = options;
-  try {
-    dismissListener.current = eventEmitter.addListener(
-      'onViewerDidDismiss',
-      () => {
-        onDismiss?.();
-        dismissListener.current?.remove();
-      }
-    );
 
-    await FileViewerTurbo.open(normalize(path), nativeOptions);
-  } catch (error) {
-    throw error;
-  }
+  dismissListener = FileViewerTurbo.onViewerDidDismiss(() => {
+    onDismiss?.();
+    dismissListener?.remove();
+  });
+
+  await FileViewerTurbo.open(normalize(path), nativeOptions as Options);
 }
 
 function normalize(path: string) {
@@ -45,7 +23,9 @@ function normalize(path: string) {
     path = path.substring(filePrefix.length);
     try {
       path = decodeURI(path);
-    } catch (e) {}
+    } catch {
+      // ignore decode errors
+    }
   }
 
   return path;

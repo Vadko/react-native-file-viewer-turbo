@@ -1,15 +1,6 @@
-#import <React/RCTEventEmitter.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #import <RNFileViewerTurboSpec/RNFileViewerTurboSpec.h>
 
-@interface FileViewerTurbo : RCTEventEmitter <NativeFileViewerTurboSpec>
-
-#else
-#import <React/RCTBridgeModule.h>
-
-@interface FileViewerTurbo: RCTEventEmitter <RCTBridgeModule, NSURLSessionTaskDelegate>
-#endif
+@interface FileViewerTurbo : NativeFileViewerTurboSpecBase <NativeFileViewerTurboSpec>
 
 + (UIViewController*)topViewController;
 + (UIViewController*)topViewControllerWithRootViewController:(UIViewController*)viewController;

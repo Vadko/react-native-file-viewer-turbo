@@ -2,7 +2,11 @@
 
 Since the original [react-native-file-viewer](https://github.com/vinzscam/react-native-file-viewer) is no longer maintained, I decided to fork it and update it to work with the latest React Native versions.
 
-This native file viewer for React Native utilizes the QuickLook Framework on iOS and the ACTION_VIEW intent to launch the default app associated with the specified file on Android. It now features TurboModules and Expo support while maintaining backward compatibility with Legacy Native Modules.
+This native file viewer for React Native utilizes the QuickLook Framework on iOS and the ACTION_VIEW intent to launch the default app associated with the specified file on Android. It now features TurboModules and Expo support.
+
+## ⚠️ New Architecture Only
+
+**Starting from version 0.7.0, this library supports only the New Architecture.** If you need to support the Old Architecture, please use version 0.6.x or earlier.
 
 While most of the code remains the same as the original library, I implemented several changes to enhance the overall UI/UX and ensure proper handling of asynchronous logic by using promises instead of EventEmitters where applicable.
 
