@@ -57,6 +57,13 @@ jobs:
             ${{ steps.changelog.outputs.compareurl }}
             ${{ steps.changelog.outputs.changelog }}
 
-      - uses: JS-DevTools/npm-publish@v4
+      - name: Setup Node.js for npm publish
+        if: steps.create_tag.outputs.successful == 'true'
+        uses: actions/setup-node@v4
         with:
-          access: public
+          node-version-file: .nvmrc
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        if: steps.create_tag.outputs.successful == 'true'
+        run: npm publish --access public
