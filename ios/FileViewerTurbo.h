@@ -1,7 +1,7 @@
 #import <React/RCTEventEmitter.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import "generated/RNFileViewerTurboSpec/RNFileViewerTurboSpec.h"
+#import <RNFileViewerTurboSpec/RNFileViewerTurboSpec.h>
 
 @interface FileViewerTurbo : RCTEventEmitter <NativeFileViewerTurboSpec>
 

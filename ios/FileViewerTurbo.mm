@@ -4,7 +4,7 @@
 #import <React/RCTEventEmitter.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import "generated/RNFileViewerTurboSpec/RNFileViewerTurboSpec.h"
+#import <RNFileViewerTurboSpec/RNFileViewerTurboSpec.h>
 #endif
 
 @interface File: NSObject<QLPreviewItem>
@@ -166,13 +166,13 @@ RCT_EXPORT_METHOD(open:(NSString *)path
       }
 
       UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
-    
+
       if (doneButtonTitle) {
         buttonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
       } else {
         buttonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissView:)];
       }
-  
+
       if ([doneButtonPosition isEqualToString: @"left"]) {
         controller.navigationItem.leftBarButtonItem = buttonItem;
       } else if ([doneButtonPosition isEqualToString: @"right"]) {
