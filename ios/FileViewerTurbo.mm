@@ -47,7 +47,8 @@
 }
 
 - (BOOL)prefersStatusBarHidden {
-    return UIApplication.sharedApplication.isStatusBarHidden;
+    UIWindowScene *windowScene = (UIWindowScene *)UIApplication.sharedApplication.connectedScenes.allObjects.firstObject;
+    return windowScene.statusBarManager.isStatusBarHidden;
 }
 
 - (NSInteger)numberOfPreviewItemsInPreviewController:(QLPreviewController *)controller{
@@ -73,9 +74,23 @@ static NSNumber *invocationId = @33341;
     return dispatch_get_main_queue();
 }
 
++ (UIWindow*)keyWindow {
+    for (UIWindowScene *windowScene in UIApplication.sharedApplication.connectedScenes) {
+        if (windowScene.activationState == UISceneActivationStateForegroundActive) {
+            for (UIWindow *window in windowScene.windows) {
+                if (window.isKeyWindow) {
+                    return window;
+                }
+            }
+        }
+    }
+    return nil;
+}
+
 + (UIViewController*)topViewController {
-    UIViewController *presenterViewController = [self topViewControllerWithRootViewController:UIApplication.sharedApplication.keyWindow.rootViewController];
-    return presenterViewController ? presenterViewController : UIApplication.sharedApplication.keyWindow.rootViewController;
+    UIWindow *keyWindow = [self keyWindow];
+    UIViewController *presenterViewController = [self topViewControllerWithRootViewController:keyWindow.rootViewController];
+    return presenterViewController ? presenterViewController : keyWindow.rootViewController;
 }
 
 + (UIViewController*)topViewControllerWithRootViewController:(UIViewController*)viewController {

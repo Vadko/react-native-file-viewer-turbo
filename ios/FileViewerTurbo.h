@@ -2,6 +2,7 @@
 
 @interface FileViewerTurbo : NativeFileViewerTurboSpecBase <NativeFileViewerTurboSpec>
 
++ (UIWindow*)keyWindow;
 + (UIViewController*)topViewController;
 + (UIViewController*)topViewControllerWithRootViewController:(UIViewController*)viewController;
 
