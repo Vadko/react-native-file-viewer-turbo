@@ -119,10 +119,10 @@ import { getDocumentAsync } from "expo-document-picker";
 
 try {
   const result = await getDocumentAsync({ type: 'application/pdf' });
-  if (result.assets?.[0] === null) {
-    return
+  if (result.canceled || !result.assets?.[0]) {
+    return;
   }
-  await open(result.assets?.[0].uri, { displayName: 'My PDF Document' });
+  await open(result.assets[0].uri, { displayName: 'My PDF Document' });
 } catch (e) {
   // error
 }
@@ -136,10 +136,10 @@ import { launchImageLibraryAsync } from "expo-image-picker";
 
 try {
   const result = await launchImageLibraryAsync();
-  if (result.assets?.[0] === null) {
-    return
+  if (result.canceled || !result.assets?.[0]) {
+    return;
   }
-  await open(result.assets?.[0].uri, { displayName: 'Image' });
+  await open(result.assets[0].uri, { displayName: 'Image' });
 } catch (e) {
   // error
 }
@@ -159,19 +159,20 @@ try {
 
 ### Open a file from Android assets folder
 
-Since the library works only with absolute paths and Android assets folder doesn't have any absolute path, the file needs to be copied first. Use [copyAsync](https://docs.expo.dev/versions/latest/sdk/filesystem/#filesystemcopyasyncoptions) of [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem).
+Since the library works only with absolute paths and Android assets folder doesn't have any absolute path, the file needs to be copied first. Use [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem).
 
 Example (using expo-file-system):
 
 ```javascript
 import { open } from "react-native-file-viewer-turbo";
-import { copyAsync, documentDirectory } from "expo-file-system";
+import { File, Paths } from "expo-file-system/next";
 
-const file = "file-to-open.doc"; // this is your file name
-const dest = `${documentDirectory}/${file}`;
+const fileName = "file-to-open.doc";
+const sourceFile = new File(Paths.cache, fileName);
+const destFile = new File(Paths.document, fileName);
 
-await copyAsync({ from: file, to: dest })
-await open(dest, { displayName: 'My Document' })
+sourceFile.copy(destFile);
+await open(destFile.uri, { displayName: 'My Document' });
 ```
 
 ### Download and open a file (using [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem))
@@ -183,8 +184,7 @@ Example (using expo-file-system):
 
 ```javascript
 import { open } from "react-native-file-viewer-turbo";
-import { downloadAsync, documentDirectory } from "expo-file-system";
-import { Platform } from "react-native";
+import { File, Paths } from "expo-file-system/next";
 
 const url =
   "https://github.com/Vadko/react-native-file-viewer-turbo/raw/main/docs/sample.pdf";
@@ -199,17 +199,17 @@ function getUrlExtension(url: string) {
 
 const extension = getUrlExtension(url);
 
-// Feel free to change main path according to your requirements.
-const localFile = `${documentDirectory}/temporaryfile.${extension}`;
-
-const options = {
-  fromUrl: url,
-  toFile: localFile,
-};
-
 try {
-  const result = await downloadAsync(url, localFile);
-  await open(result.uri, { displayName: "Downloaded PDF" });
+  const destination = new File(Paths.document, `temporaryfile.${extension}`);
+
+  // Delete existing file if exists
+  if (destination.exists) {
+    destination.delete();
+  }
+
+  await File.downloadFileAsync(url, destination);
+
+  await open(destination.uri, { displayName: "Downloaded PDF" });
 } catch (e) {
   // error
 }
