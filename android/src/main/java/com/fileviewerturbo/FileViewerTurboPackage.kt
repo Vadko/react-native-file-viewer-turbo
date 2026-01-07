@@ -8,7 +8,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 
 class FileViewerTurboPackage : BaseReactPackage() {
   override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-    return if (name == FileViewerTurboModuleImpl.NAME) {
+    return if (name == FileViewerTurboModule.NAME) {
       FileViewerTurboModule(reactContext)
     } else {
       null
@@ -18,15 +18,13 @@ class FileViewerTurboPackage : BaseReactPackage() {
   override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
     return ReactModuleInfoProvider {
       val moduleInfos: MutableMap<String, ReactModuleInfo> = HashMap()
-      val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-      moduleInfos[FileViewerTurboModuleImpl.NAME] = ReactModuleInfo(
-        FileViewerTurboModuleImpl.NAME,
-        FileViewerTurboModuleImpl.NAME,
+      moduleInfos[FileViewerTurboModule.NAME] = ReactModuleInfo(
+        FileViewerTurboModule.NAME,
+        FileViewerTurboModule.NAME,
         false,  // canOverrideExistingModule
         false,  // needsEagerInit
-        true,  // hasConstants
         false,  // isCxxModule
-        isTurboModule // isTurboModule
+        true // isTurboModule
       )
       moduleInfos
     }

@@ -1,6 +1,6 @@
 {
   "name": "react-native-file-viewer-turbo",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Native file viewer for react-native - now with TurboModules support",
   "source": "./src/index.tsx",
   "main": "./lib/module/index.js",
@@ -73,29 +73,29 @@
     "@eslint/eslintrc": "^3.3.0",
     "@eslint/js": "^9.22.0",
     "@evilmartians/lefthook": "^1.5.0",
-    "@expo/config-plugins": "^9.0.12",
-    "@react-native-community/cli": "18.0.0",
-    "@react-native/babel-preset": "0.79.2",
-    "@react-native/eslint-config": "^0.79.2",
+    "@expo/config-plugins": "^54.0.4",
+    "@react-native-community/cli": "20.0.2",
+    "@react-native/babel-preset": "0.83.0",
+    "@react-native/eslint-config": "^0.83.0",
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.1.12",
     "commitlint": "^19.6.1",
-    "del-cli": "^5.1.0",
+    "del-cli": "^6.0.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
     "jest": "^29.7.0",
     "prettier": "^3.0.3",
-    "react": "19.0.0",
-    "react-native": "0.79.2",
-    "react-native-builder-bob": "^0.40.5",
+    "react": "19.1.0",
+    "react-native": "0.83.0",
+    "react-native-builder-bob": "^0.40.17",
     "release-it": "^17.10.0",
     "turbo": "^1.10.7",
-    "typescript": "^5.2.2"
+    "typescript": "^5.9.2"
   },
   "resolutions": {
-    "@types/react": "^18.2.44"
+    "@types/react": "^19.1.12"
   },
   "peerDependencies": {
     "react": "*",
@@ -104,7 +104,7 @@
   "workspaces": [
     "example"
   ],
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "yarn@4.11.0",
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
@@ -169,7 +169,6 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "codegen",
       "commonjs",
       [
         "module",
@@ -189,18 +188,19 @@
     "name": "RNFileViewerTurboSpec",
     "type": "modules",
     "jsSrcsDir": "src",
-    "outputDir": {
-      "ios": "ios/generated",
-      "android": "android/generated"
-    },
     "android": {
       "javaPackageName": "com.fileviewerturbo"
-    },
-    "includesGeneratedCode": true
+    }
   },
   "create-react-native-library": {
-    "type": "module-new",
+    "type": "turbo-module",
     "languages": "kotlin-objc",
-    "version": "0.45.0"
+    "tools": [
+      "eslint",
+      "jest",
+      "lefthook",
+      "release-it"
+    ],
+    "version": "0.56.0"
   }
 }

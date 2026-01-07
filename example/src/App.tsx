@@ -1,4 +1,5 @@
-import { View, StyleSheet, Button } from 'react-native';
+import { useState } from 'react';
+import { View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import {
   DocumentDirectoryPath,
   downloadFile,
@@ -10,7 +11,9 @@ function getUrlExtension(url: string) {
 }
 
 export default function App() {
-  const press = () => {
+  const [loading, setLoading] = useState(false);
+
+  const press = async () => {
     const url =
       'https://github.com/Vadko/react-native-file-viewer-turbo/raw/main/docs/sample.pdf';
 
@@ -28,20 +31,30 @@ export default function App() {
       fromUrl: url,
       toFile: localFile,
     };
-    downloadFile(options).promise.then(() =>
-      open(localFile, {
+
+    try {
+      setLoading(true);
+      await downloadFile(options).promise;
+      setLoading(false);
+      await open(localFile, {
         onDismiss: () => console.log('dismissed!'),
         doneButtonTitle: 'Custom done',
         doneButtonPosition: 'right',
-      })
-        .then(console.log)
-        .catch(console.error)
-    );
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Button onPress={press} title="Open file" />
+      {loading ? (
+        <ActivityIndicator size="large" />
+      ) : (
+        <Button onPress={press} title="Open file" />
+      )}
     </View>
   );
 }
