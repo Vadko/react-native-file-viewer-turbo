@@ -1,12 +1,17 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
 import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
 
+export enum DoneButtonPosition {
+  left = 'left',
+  right = 'right'
+}
+
 export type Options = {
   displayName?: string;
   doneButtonTitle?: string;
   showOpenWithDialog?: boolean;
   showAppsSuggestions?: boolean;
-  doneButtonPosition?: 'left' | 'right';
+  doneButtonPosition?: DoneButtonPosition;
 };
 
 export interface Spec extends TurboModule {
