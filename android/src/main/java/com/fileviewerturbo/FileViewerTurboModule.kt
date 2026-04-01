@@ -21,6 +21,26 @@ class FileViewerTurboModule(reactContext: ReactApplicationContext) :
     private const val SHOW_OPEN_WITH_DIALOG = "showOpenWithDialog"
     private const val SHOW_STORE_SUGGESTIONS = "showAppsSuggestions"
     private const val RN_FILE_VIEWER_REQUEST = 33341
+
+    fun getFileExtension(filePath: String?): String {
+      if (filePath == null || filePath.isEmpty()) {
+        return ""
+      }
+
+      val extFromUrl = MimeTypeMap.getFileExtensionFromUrl(filePath)
+      if (!extFromUrl.isNullOrEmpty()) {
+        return extFromUrl
+      }
+
+      val lastDotIndex = filePath.lastIndexOf('.')
+      val lastSeparatorIndex = maxOf(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'))
+
+      if (lastDotIndex == -1 || lastDotIndex < lastSeparatorIndex || lastDotIndex == 0) {
+        return ""
+      }
+
+      return filePath.substring(lastDotIndex + 1)
+    }
   }
 
   init {
@@ -70,7 +90,7 @@ class FileViewerTurboModule(reactContext: ReactApplicationContext) :
       return
     }
 
-    val extension = MimeTypeMap.getFileExtensionFromUrl(path).lowercase()
+    val extension = getFileExtension(path).lowercase()
     val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
 
     val shareIntent = Intent().apply {
