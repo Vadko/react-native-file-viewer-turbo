@@ -3,7 +3,7 @@ import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
 
 export enum DoneButtonPosition {
   left = 'left',
-  right = 'right'
+  right = 'right',
 }
 
 export type Options = {
