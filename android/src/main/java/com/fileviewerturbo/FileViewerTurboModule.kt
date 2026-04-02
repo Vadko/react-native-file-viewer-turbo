@@ -70,7 +70,7 @@ class FileViewerTurboModule(reactContext: ReactApplicationContext) :
       return
     }
 
-    val extension = MimeTypeMap.getFileExtensionFromUrl(path).lowercase()
+    val extension = MimeTypeMap.getFileExtensionFromUrl(Uri.encode(path)).lowercase()
     val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
 
     val shareIntent = Intent().apply {
