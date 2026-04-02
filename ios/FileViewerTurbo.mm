@@ -140,13 +140,18 @@ RCT_EXPORT_METHOD(open:(NSString *)path
       File *file = [[File alloc] initWithPath:path title:displayName];
 
       QLPreviewController *controller = [[CustomQLViewController alloc] initWithFile:file identifier:invocationId];
-      controller.delegate = self;
 
       if (@available(iOS 13.0, *)) {
           [controller setModalInPresentation: true];
       }
 
+      controller.delegate = self;
+
       UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
+
+      if (@available(iOS 13.0, *)) {
+          [navigationController setModalInPresentation: true];
+      }
 
       if (doneButtonTitle) {
         buttonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
