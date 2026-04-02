@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, StyleSheet, Button, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Button, StyleSheet, View } from 'react-native';
 import {
   DocumentDirectoryPath,
   downloadFile,
 } from '@dr.pogodin/react-native-fs';
 import { open } from 'react-native-file-viewer-turbo';
+import { DoneButtonPosition } from '../../src/NativeFileViewerTurbo';
 
 function getUrlExtension(url: string) {
   return url.split(/[#?]/)[0]?.split('.').pop()?.trim() ?? '';
@@ -39,7 +40,7 @@ export default function App() {
       await open(localFile, {
         onDismiss: () => console.log('dismissed!'),
         doneButtonTitle: 'Custom done',
-        doneButtonPosition: 'right',
+        doneButtonPosition: DoneButtonPosition.right,
       });
     } catch (error) {
       console.error(error);
