@@ -15,18 +15,16 @@ class FileViewerTurboPackage : BaseReactPackage() {
     }
   }
 
-  override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
-    return ReactModuleInfoProvider {
-      val moduleInfos: MutableMap<String, ReactModuleInfo> = HashMap()
-      moduleInfos[FileViewerTurboModule.NAME] = ReactModuleInfo(
-        FileViewerTurboModule.NAME,
-        FileViewerTurboModule.NAME,
-        false,  // canOverrideExistingModule
-        false,  // needsEagerInit
-        false,  // isCxxModule
+  override fun getReactModuleInfoProvider() = ReactModuleInfoProvider {
+    mapOf(
+      FileViewerTurboModule.NAME to ReactModuleInfo(
+        FileViewerTurboModule.NAME, // name
+        FileViewerTurboModule.NAME, // className
+        false, // canOverrideExistingModule
+        false, // needsEagerInit
+        false, // isCxxModule
         true // isTurboModule
       )
-      moduleInfos
-    }
+    )
   }
 }

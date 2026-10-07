@@ -9,6 +9,13 @@ on:
       - '.github/**/*.yml'
       - '.gitignore'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   release:
     permissions:
@@ -17,41 +24,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Setup
-        uses: ./.github/actions/setup
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Prepare env
-        run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> $GITHUB_ENV
+        run: echo "previous_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> "$GITHUB_ENV"
 
       - name: Create Tag
         id: create_tag
-        uses: jaywcjlove/create-tag-action@main
+        uses: jaywcjlove/create-tag-action@4b8582e914640edc3602f7d9907f3821bf84bdc7 # v2.3.0
         if: env.previous_tag
         with:
           package-path: ./package.json
 
       - name: Generate Changelog
         id: changelog
-        uses: jaywcjlove/changelog-generator@main
+        uses: jaywcjlove/changelog-generator@00eecde44f40feee4b5c96fe16e5cfdeab76336a # v2.4.0
         if: steps.create_tag.outputs.successful == 'true'
         with:
-          head-ref: ${{steps.create_tag.outputs.version}}
+          head-ref: ${{ steps.create_tag.outputs.version }}
           filter: (^[\s]+?[R|r]elease)|(^[R|r]elease)
 
       - name: Create Release
-        uses: jaywcjlove/create-tag-action@main
+        uses: jaywcjlove/create-tag-action@4b8582e914640edc3602f7d9907f3821bf84bdc7 # v2.3.0
         id: release
         if: steps.create_tag.outputs.successful == 'true'
         with:
-          version: ${{steps.create_tag.outputs.version}}
+          version: ${{ steps.create_tag.outputs.version }}
           release: true
           body: |
             ```bash
-            yarn add react-native-file-viewer-turbo@${{steps.create_tag.outputs.versionNumber}}
+            yarn add react-native-file-viewer-turbo@${{ steps.create_tag.outputs.versionNumber }}
             ```
 
             ${{ steps.changelog.outputs.compareurl }}
@@ -59,24 +72,19 @@ jobs:
 
       - name: Get package version
         id: pkg_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Check if version exists on npm
         id: npm_check
         run: |
-          if npm view react-native-file-viewer-turbo@${{ steps.pkg_version.outputs.version }} version 2>/dev/null; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+          if npm view "react-native-file-viewer-turbo@${{ steps.pkg_version.outputs.version }}" version 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Setup Node.js for npm publish
-        if: steps.npm_check.outputs.exists == 'false'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
         if: steps.npm_check.outputs.exists == 'false'
-        run: npm publish --access public
+        run: |
+          npm --version
+          npm publish --access public

@@ -1,34 +1,62 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "agentGuidance": false,
+  "globalDependencies": [".nvmrc", ".yarnrc.yml"],
+  "globalEnv": ["NODE_ENV"],
+  "tasks": {
     "build:android": {
-      "env": ["ORG_GRADLE_PROJECT_newArchEnabled"],
+      "env": ["ANDROID_HOME", "ORG_GRADLE_PROJECT_newArchEnabled"],
+      "passThroughEnv": [
+        "JAVA_HOME",
+        "JAVA_OPTS",
+        "GRADLE_OPTS",
+        "GRADLE_USER_HOME"
+      ],
       "inputs": [
+        "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/android",
+        "!$TURBO_ROOT$/android/build",
+        "!$TURBO_ROOT$/android/.gradle",
+        "!$TURBO_ROOT$/android/.cxx",
+        "!$TURBO_ROOT$/android/.kotlin",
+        "$TURBO_ROOT$/src/**/*.ts",
+        "$TURBO_ROOT$/src/**/*.tsx",
+        "!$TURBO_ROOT$/src/**/__tests__/**",
         "package.json",
         "android",
+        "!android/.gradle",
+        "!android/.kotlin",
         "!android/build",
+        "!android/app/build",
+        "!android/app/.cxx",
         "src/*.ts",
-        "src/*.tsx",
-        "example/package.json",
-        "example/android",
-        "!example/android/.gradle",
-        "!example/android/build",
-        "!example/android/app/build"
+        "src/*.tsx"
       ],
       "outputs": []
     },
     "build:ios": {
-      "env": ["RCT_NEW_ARCH_ENABLED"],
+      "env": [
+        "RCT_NEW_ARCH_ENABLED",
+        "RCT_REMOVE_LEGACY_ARCH",
+        "RCT_USE_RN_DEP",
+        "RCT_USE_PREBUILT_RNCORE"
+      ],
       "inputs": [
+        "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/*.podspec",
+        "$TURBO_ROOT$/ios",
+        "!$TURBO_ROOT$/ios/build",
+        "$TURBO_ROOT$/src/**/*.ts",
+        "$TURBO_ROOT$/src/**/*.tsx",
+        "!$TURBO_ROOT$/src/**/__tests__/**",
         "package.json",
-        "*.podspec",
         "ios",
+        "!ios/build",
+        "!ios/Pods",
+        "!ios/Podfile.lock",
+        "!ios/.xcode.env.local",
         "src/*.ts",
-        "src/*.tsx",
-        "example/package.json",
-        "example/ios",
-        "!example/ios/build",
-        "!example/ios/Pods"
+        "src/*.tsx"
       ],
       "outputs": []
     }

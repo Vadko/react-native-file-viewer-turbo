@@ -11,7 +11,8 @@ This native file viewer for React Native utilizes the QuickLook Framework on iOS
 While most of the code remains the same as the original library, I implemented several changes to enhance the overall UI/UX and ensure proper handling of asynchronous logic by using promises instead of EventEmitters where applicable.
 
 ## Compatibility
-This library requires React Native 0.76.3 or newer. It is compatible with Expo SDK 52 or newer.
+
+This library requires React Native 0.76 or newer (New Architecture) and is compatible with Expo SDK 52 or newer. On web, `open()` opens the file (an http(s), `blob:` or `data:` URL) in a new browser tab; call it directly from a user action, otherwise the browser may block the tab.
 
 ## Expo
 
@@ -21,20 +22,20 @@ This library requires React Native 0.76.3 or newer. It is compatible with Expo S
 npx expo install react-native-file-viewer-turbo
 ```
 
-Add plugin to your `app.json` or `app.config.js` with preferred `mimeTypes` (it will modify AndroidManifest.xml as described below in extra step for Android section):
+If you use `showOpenWithDialog` on Android, add the plugin to your `app.json` or `app.config.js` with preferred `mimeTypes` (it will modify AndroidManifest.xml as described below in extra step for Android section):
 
 ```json
 {
-  "plugins": [
-    [
-      "react-native-file-viewer-turbo",
-      {
-        "mimeTypes": [
-          "*/*"
-        ]
-      }
+  "expo": {
+    "plugins": [
+      [
+        "react-native-file-viewer-turbo",
+        {
+          "mimeTypes": ["application/pdf", "image/*"]
+        }
+      ]
     ]
-  ]
+  }
 }
 ```
 
@@ -44,7 +45,7 @@ Add plugin to your `app.json` or `app.config.js` with preferred `mimeTypes` (it 
 
 ```sh
 npm install react-native-file-viewer-turbo
-OR
+# or
 yarn add react-native-file-viewer-turbo
 
 cd ios && pod install
@@ -52,11 +53,11 @@ cd ios && pod install
 
 #### Extra step (Android only)
 
-If your app is targeting **Android 11 (API level 30) or newer**, the following extra step is required, as described in [Declaring package visibility needs](https://developer.android.com/training/package-visibility/declaring) and [Package visibility in Android 11](https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9).
+If you use `showOpenWithDialog` and your app is targeting **Android 11 (API level 30) or newer**, the following extra step is required, as described in [Declaring package visibility needs](https://developer.android.com/training/package-visibility/declaring) and [Package visibility in Android 11](https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9). A plain `open()` works without it.
 
 Specifically:
 
-> If your app targets Android 11 or higher and needs to interact with apps other than the ones that are visible automatically, add the <queries> element in your app's manifest file. Within the <queries> element, specify the other apps by package name, by intent signature, or by provider authority, as described in the following sections.
+> If your app targets Android 11 or higher and needs to interact with apps other than the ones that are visible automatically, add the `<queries>` element in your app's manifest file. Within the `<queries>` element, specify the other apps by package name, by intent signature, or by provider authority, as described in the following sections.
 
 For example, if you know upfront that your app is supposed to open PDF files, the following lines should be added to your `AndroidManifest.xml`.
 
@@ -73,39 +74,60 @@ For example, if you know upfront that your app is supposed to open PDF files, th
 </manifest>
 ```
 
+**IMPORTANT**: Try to be as granular as possible when defining your own queries. This might affect your Play Store approval, as mentioned in [Package visibility filtering on Android](https://developer.android.com/training/package-visibility).
+
+## Android FileProvider
+
+On Android the library shares files with the viewer app through its own FileProvider with the authority `${applicationId}.fileviewerturbo.provider` (up to 0.7.5 it was `${applicationId}.provider`, which clashed with other libraries). Files must be in the app's files or cache directory, app-specific external storage or the external storage root, see [`fileviewerturbo_provider_paths.xml`](android/src/main/res/xml/fileviewerturbo_provider_paths.xml).
+
 ## API
 
 ### `open(filepath: string, options?: Options): Promise<void>`
 
-| Parameter              | Type   | Description                                                                                                                                                                                                                                         |
-| ---------------------- | ------ |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **filepath**           | string | The absolute path where the file is stored. The file needs to have a valid extension to be successfully detected. Use [expo-file-system constants](https://docs.expo.dev/versions/latest/sdk/filesystem/#constants) to determine the absolute path correctly. |
-| **options** (optional) | Object | Some options to customize the behaviour. See below.                                                                                                                                                                                                 |
+| Parameter              | Type      | Description                                                                                                                                                                                                                                                                              |
+| ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **filepath**           | `string`  | The absolute path, `file://` URI or (Android only) `content://` URI of the file. The file needs to have a valid extension to be successfully detected. Use [expo-file-system constants](https://docs.expo.dev/versions/latest/sdk/filesystem/) to determine the absolute path correctly. |
+| **options** (optional) | `Options` | Some options to customize the behaviour. See below.                                                                                                                                                                                                                                      |
 
 #### Options
 
-| Parameter                         | Type          | Platform     | Description                                                                                      |
-|-----------------------------------|---------------|--------------|--------------------------------------------------------------------------------------------------|
-| **displayName** (optional)        | string        | iOS          | Customize the QuickLook title                                                                    |
-| **doneButtonTitle** (optional)    | string        | iOS          | Customize UINavigationController Done button title                                               |
-| **doneButtonPosition** (optional) | left \| right | iOS          | Customize UINavigationController Done button position                                            |
-| **onDismiss** (optional)          | function      | iOS, Android | Callback invoked when the viewer is being dismissed                                              |
-| **showOpenWithDialog** (optional) | boolean       | Android      | If there is more than one app that can open the file, show an _Open With_ dialogue box           |
+| Parameter                          | Type          | Platform     | Description                                                                                      |
+| ---------------------------------- | ------------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| **displayName** (optional)         | string        | iOS          | Customize the QuickLook title                                                                    |
+| **doneButtonTitle** (optional)     | string        | iOS          | Customize UINavigationController Done button title                                               |
+| **doneButtonPosition** (optional)  | left \| right | iOS          | Customize UINavigationController Done button position                                            |
+| **onDismiss** (optional)           | function      | iOS, Android | Callback invoked when the viewer is being dismissed                                              |
+| **showOpenWithDialog** (optional)  | boolean       | Android      | If there is more than one app that can open the file, show an _Open With_ dialogue box           |
 | **showAppsSuggestions** (optional) | boolean       | Android      | If there is not an installed app that can open the file, open the Play Store with suggested apps |
-
-**IMPORTANT**: Try to be as granular as possible when defining your own queries. This might affect your Play Store approval, as mentioned in [Package visibility filtering on Android](https://developer.android.com/training/package-visibility).
-
-> If you publish your app on Google Play, your app's use of this permission is subject to approval based on an upcoming policy.
 
 ## Usage
 
 ### Open a local file
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
+```ts
+import { open } from 'react-native-file-viewer-turbo';
 
 try {
-  await open(path); //absolute-path-to-my-local-file
+  await open(path); // absolute path, file:// URI or (Android only) content:// URI
+} catch (e) {
+  // error
+}
+```
+
+### Customize the viewer and get notified when it is closed
+
+```ts
+import { open } from 'react-native-file-viewer-turbo';
+
+try {
+  await open(path, {
+    displayName: 'Sample PDF', // iOS
+    doneButtonTitle: 'Close', // iOS
+    doneButtonPosition: 'right', // iOS
+    onDismiss: () => {
+      console.log('Viewer dismissed');
+    },
+  });
 } catch (e) {
   // error
 }
@@ -113,33 +135,35 @@ try {
 
 ### Pick up and open a local file #1 (using [expo-document-picker](https://docs.expo.dev/versions/latest/sdk/document-picker/))
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
-import { getDocumentAsync } from "expo-document-picker";
+```ts
+import { getDocumentAsync } from 'expo-document-picker';
+import { open } from 'react-native-file-viewer-turbo';
 
 try {
   const result = await getDocumentAsync({ type: 'application/pdf' });
-  if (result.canceled || !result.assets?.[0]) {
-    return;
+  // `assets` is null when the user canceled.
+  const document = result.assets?.[0];
+  if (document) {
+    await open(document.uri, { displayName: document.name });
   }
-  await open(result.assets[0].uri, { displayName: 'My PDF Document' });
 } catch (e) {
   // error
 }
 ```
 
-### Pick up and open a local file #2 (using [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker))
+### Pick up and open a local file #2 (using [expo-image-picker](https://docs.expo.dev/versions/latest/sdk/imagepicker/))
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
-import { launchImageLibraryAsync } from "expo-image-picker";
+```ts
+import { launchImageLibraryAsync } from 'expo-image-picker';
+import { open } from 'react-native-file-viewer-turbo';
 
 try {
   const result = await launchImageLibraryAsync();
-  if (result.canceled || !result.assets?.[0]) {
-    return;
+  // `assets` is null when the user canceled.
+  const image = result.assets?.[0];
+  if (image) {
+    await open(image.uri, { displayName: 'Image' });
   }
-  await open(result.assets[0].uri, { displayName: 'Image' });
 } catch (e) {
   // error
 }
@@ -147,11 +171,11 @@ try {
 
 ### Prompt the user to choose an app to open the file with (if there are multiple installed apps that support the mimetype)
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
+```ts
+import { open } from 'react-native-file-viewer-turbo';
 
 try {
-  await open(path, { showOpenWithDialog: true }) // absolute-path-to-my-local-file.
+  await open(path, { showOpenWithDialog: true }); // Android only
 } catch (e) {
   // error
 }
@@ -159,42 +183,52 @@ try {
 
 ### Open a file from Android assets folder
 
-Since the library works only with absolute paths and Android assets folder doesn't have any absolute path, the file needs to be copied first. Use [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem).
+Since the library works only with absolute paths and Android assets folder doesn't have any absolute path, the file needs to be copied first. Use [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/): on Android, `Paths.bundle` points to the assets folder of the app (`android/app/src/main/assets`).
 
 Example (using expo-file-system):
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
-import { File, Paths } from "expo-file-system/next";
+```ts
+import { File, Paths } from 'expo-file-system';
+import { open } from 'react-native-file-viewer-turbo';
 
-const fileName = "file-to-open.doc";
-const sourceFile = new File(Paths.cache, fileName);
-const destFile = new File(Paths.document, fileName);
+const fileName = 'file-to-open.pdf';
+const asset = new File(Paths.bundle, fileName);
+const destination = new File(Paths.document, fileName);
 
-sourceFile.copy(destFile);
-await open(destFile.uri, { displayName: 'My Document' });
+try {
+  // Delete existing file if exists
+  if (destination.exists) {
+    destination.delete();
+  }
+
+  await asset.copy(destination);
+
+  await open(destination.uri, { displayName: 'My Document' });
+} catch (e) {
+  // error
+}
 ```
 
-### Download and open a file (using [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem))
+### Download and open a file (using [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/))
 
 No function about file downloading has been implemented in this package.
-Use [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem) or any similar library for this purpose.
+Use [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) or any similar library for this purpose. The [example app](example/src/App.tsx) does the same without Expo, using [@dr.pogodin/react-native-fs](https://github.com/birdofpreyru/react-native-fs).
 
 Example (using expo-file-system):
 
-```javascript
-import { open } from "react-native-file-viewer-turbo";
-import { File, Paths } from "expo-file-system/next";
+```ts
+import { File, Paths } from 'expo-file-system';
+import { open } from 'react-native-file-viewer-turbo';
 
 const url =
-  "https://github.com/Vadko/react-native-file-viewer-turbo/raw/main/docs/sample.pdf";
+  'https://github.com/Vadko/react-native-file-viewer-turbo/raw/main/docs/sample.pdf';
 
 // *IMPORTANT*: The correct file extension is always required.
 // You might encounter issues if the file's extension isn't included
 // or if it doesn't match the mime type of the file.
 // https://stackoverflow.com/a/47767860
-function getUrlExtension(url: string) {
-  return url.split(/[#?]/)[0].split(".").pop()?.trim() ?? "";
+function getUrlExtension(url: string): string {
+  return url.split(/[#?]/)[0]?.split('.').pop()?.trim() ?? '';
 }
 
 const extension = getUrlExtension(url);
@@ -209,11 +243,17 @@ try {
 
   await File.downloadFileAsync(url, destination);
 
-  await open(destination.uri, { displayName: "Downloaded PDF" });
+  await open(destination.uri, { displayName: 'Downloaded PDF' });
 } catch (e) {
   // error
 }
 ```
+
+## Upgrading from 0.7.x
+
+- **Android FileProvider authority** is now `${applicationId}.fileviewerturbo.provider`. If you removed this library's provider with `tools:node="remove"` to work around a clash with another library, remove that workaround, otherwise `open()` fails.
+- **`file://` URIs** are decoded with `decodeURIComponent`, so `%23`, `%26` and `%3F` now become `#`, `&` and `?`.
+- **`<queries>`** on Android is only needed for `showOpenWithDialog`.
 
 ## Contributing
 
