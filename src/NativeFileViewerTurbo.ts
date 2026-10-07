@@ -1,5 +1,12 @@
-import { TurboModuleRegistry, type TurboModule } from 'react-native';
-import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
+import {
+  TurboModuleRegistry,
+  type EventSubscription,
+  type TurboModule,
+} from 'react-native';
+
+type EventEmitter<T> = (
+  handler: (arg: T) => void | Promise<void>
+) => EventSubscription;
 
 export enum DoneButtonPosition {
   left = 'left',

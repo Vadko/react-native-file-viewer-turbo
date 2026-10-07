@@ -1,34 +1,35 @@
-import * as Expo from '@expo/config-plugins';
+import { withAndroidManifest, type ConfigPlugin } from 'expo/config-plugins';
 
 type Props = {
-  mimeTypes: string[];
+  mimeTypes?: string[];
 };
 
-export const withFilePreviewTurbo: Expo.ConfigPlugin<Props> = (
+const VIEW_ACTION = 'android.intent.action.VIEW';
+
+export const withFilePreviewTurbo: ConfigPlugin<Props | void> = (
   config,
   props
-) => {
-  const plugins: Expo.ConfigPlugin<Props>[] = [];
-  const { platforms = [] } = config;
+) =>
+  withAndroidManifest(config, (modConfig) => {
+    const { manifest } = modConfig.modResults;
+    manifest.queries ??= [];
 
-  const withAndroidManifest: Expo.ConfigPlugin<Props> = (config) =>
-    Expo.withAndroidManifest(config, (config) => {
-      config.modResults.manifest.queries.push({
-        intent: props.mimeTypes.map((mimeType) => ({
-          action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
+    const declared = manifest.queries
+      .flatMap((query) => query.intent ?? [])
+      .flatMap((intent) => intent.data ?? [])
+      .map((data) => data.$['android:mimeType']);
+    const mimeTypes = (props?.mimeTypes ?? []).filter(
+      (mimeType) => !declared.includes(mimeType)
+    );
+
+    if (mimeTypes.length > 0) {
+      manifest.queries.push({
+        intent: mimeTypes.map((mimeType) => ({
+          action: [{ $: { 'android:name': VIEW_ACTION } }],
           data: [{ $: { 'android:mimeType': mimeType } }],
         })),
       });
+    }
 
-      return config;
-    });
-
-  if (platforms.includes('android')) {
-    plugins.push(withAndroidManifest);
-  }
-
-  return Expo.withPlugins(
-    config,
-    plugins.map((plugin) => [plugin, props])
-  );
-};
+    return modConfig;
+  });

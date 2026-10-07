@@ -2,26 +2,28 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-file-viewer-turbo": ["./src/index"]
+      "react-native-file-viewer-turbo": ["./src/index"],
+      "expo/config-plugins": ["./node_modules/@expo/config-plugins"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
+    "customConditions": [
+      "react-native-file-viewer-turbo-source",
+      "react-native-strict-api"
+    ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "lib": ["ESNext"],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noStrictGenericChecks": false,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
-    "resolvePackageJsonImports": false,
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",

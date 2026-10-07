@@ -1,185 +1,160 @@
 #import "FileViewerTurbo.h"
 
 #import <QuickLook/QuickLook.h>
+#import <React/RCTUtils.h>
 
-#import <RNFileViewerTurboSpec/RNFileViewerTurboSpec.h>
+@interface RNFVTPreviewItem : NSObject <QLPreviewItem>
 
-@interface File: NSObject<QLPreviewItem>
+@property (readonly, nullable, nonatomic) NSURL *previewItemURL;
+@property (readonly, nullable, nonatomic) NSString *previewItemTitle;
 
-@property(readonly, nullable, nonatomic) NSURL *previewItemURL;
-@property(readonly, nullable, nonatomic) NSString *previewItemTitle;
-
-- (id)initWithPath:(NSString *)file title:(NSString *)title;
+- (instancetype)initWithPath:(NSString *)path title:(nullable NSString *)title;
 
 @end
 
-@interface FileViewerTurbo ()<QLPreviewControllerDelegate>
-@end
+@implementation RNFVTPreviewItem
 
-@implementation File
-
-- (id)initWithPath:(NSString *)file title:(NSString *)title {
-    if(self = [super init]) {
-        _previewItemURL = [NSURL fileURLWithPath:file];
-        _previewItemTitle = title;
-    }
-    return self;
+- (instancetype)initWithPath:(NSString *)path title:(NSString *)title
+{
+  if (self = [super init]) {
+    _previewItemURL = [NSURL fileURLWithPath:path];
+    _previewItemTitle = title;
+  }
+  return self;
 }
 
 @end
 
-@interface CustomQLViewController: QLPreviewController<QLPreviewControllerDataSource>
+@interface RNFVTPreviewController : QLPreviewController <QLPreviewControllerDataSource>
 
-@property(nonatomic, strong) File *file;
-@property(nonatomic, strong) NSNumber *invocation;
+@property (nonatomic, strong) RNFVTPreviewItem *item;
+
+- (instancetype)initWithItem:(RNFVTPreviewItem *)item;
 
 @end
 
-@implementation CustomQLViewController
+@implementation RNFVTPreviewController
 
-- (instancetype)initWithFile:(File *)file identifier:(NSNumber *)invocation {
-    if(self = [super init]) {
-        _file = file;
-        _invocation = invocation;
-        self.dataSource = self;
-    }
-    return self;
+- (instancetype)initWithItem:(RNFVTPreviewItem *)item
+{
+  if (self = [super init]) {
+    _item = item;
+    self.dataSource = self;
+  }
+  return self;
 }
 
-- (BOOL)prefersStatusBarHidden {
-    UIWindowScene *windowScene = (UIWindowScene *)UIApplication.sharedApplication.connectedScenes.allObjects.firstObject;
-    return windowScene.statusBarManager.isStatusBarHidden;
+- (BOOL)prefersStatusBarHidden
+{
+  UIStatusBarManager *statusBarManager = self.viewIfLoaded.window.windowScene.statusBarManager;
+  if (statusBarManager == nil) {
+    statusBarManager = RCTUIStatusBarManager();
+  }
+  return statusBarManager.isStatusBarHidden;
 }
 
-- (NSInteger)numberOfPreviewItemsInPreviewController:(QLPreviewController *)controller{
-    return 1;
+- (NSInteger)numberOfPreviewItemsInPreviewController:(QLPreviewController *)controller
+{
+  return 1;
 }
 
-- (id <QLPreviewItem>)previewController:(QLPreviewController *)controller previewItemAtIndex:(NSInteger)index{
-    return self.file;
+- (id<QLPreviewItem>)previewController:(QLPreviewController *)controller previewItemAtIndex:(NSInteger)index
+{
+  return self.item;
 }
 
+- (void)rnfvt_dismiss:(id)sender
+{
+  [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+@end
+
+@interface FileViewerTurbo () <QLPreviewControllerDelegate>
 @end
 
 @implementation FileViewerTurbo
 
-static NSNumber *invocationId = @33341;
+// Replaces RCT_EXPORT_MODULE. The class name must stay equal to the module name:
+// RCTTurboModuleManager uses codegenConfig.ios.modulesProvider on RN >= 0.79 and
+// falls back to NSClassFromString(moduleName) otherwise.
++ (NSString *)moduleName
+{
+  return @"FileViewerTurbo";
+}
 
-+ (BOOL)requiresMainQueueSetup {
-    return NO;
++ (BOOL)requiresMainQueueSetup
+{
+  return NO;
 }
 
 - (dispatch_queue_t)methodQueue
 {
-    return dispatch_get_main_queue();
+  return dispatch_get_main_queue();
 }
 
-+ (UIWindow*)keyWindow {
-    for (UIWindowScene *windowScene in UIApplication.sharedApplication.connectedScenes) {
-        if (windowScene.activationState == UISceneActivationStateForegroundActive) {
-            for (UIWindow *window in windowScene.windows) {
-                if (window.isKeyWindow) {
-                    return window;
-                }
-            }
-        }
-    }
-    return nil;
+- (void)previewControllerDidDismiss:(QLPreviewController *)controller
+{
+  [self emitOnViewerDidDismiss];
 }
 
-+ (UIViewController*)topViewController {
-    UIWindow *keyWindow = [self keyWindow];
-    UIViewController *presenterViewController = [self topViewControllerWithRootViewController:keyWindow.rootViewController];
-    return presenterViewController ? presenterViewController : keyWindow.rootViewController;
+- (void)open:(NSString *)path
+     options:(JS::NativeFileViewerTurbo::Options &)options
+     resolve:(RCTPromiseResolveBlock)resolve
+      reject:(RCTPromiseRejectBlock)reject
+{
+  NSString *displayName = options.displayName();
+  NSString *doneButtonTitle = options.doneButtonTitle();
+  NSString *doneButtonPosition = options.doneButtonPosition();
+
+  RNFVTPreviewItem *item = [[RNFVTPreviewItem alloc] initWithPath:path title:displayName];
+  if (![QLPreviewController canPreviewItem:item]) {
+    reject(@"FileViewerTurbo:open", @"File not supported", nil);
+    return;
+  }
+
+  UIViewController *presenter = RCTPresentedViewController();
+  if (presenter == nil) {
+    reject(@"FileViewerTurbo:open", @"No view controller available to present the file viewer", nil);
+    return;
+  }
+  if (presenter.presentedViewController != nil || presenter.isBeingPresented || presenter.viewIfLoaded.window == nil) {
+    reject(@"FileViewerTurbo:open", @"Another transition is in progress, try again once it has finished", nil);
+    return;
+  }
+
+  RNFVTPreviewController *controller = [[RNFVTPreviewController alloc] initWithItem:item];
+  controller.delegate = self;
+
+  UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
+  navigationController.modalInPresentation = YES;
+
+  UIBarButtonItem *buttonItem = doneButtonTitle
+      ? [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle
+                                         style:UIBarButtonItemStylePlain
+                                        target:controller
+                                        action:@selector(rnfvt_dismiss:)]
+      : [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                                      target:controller
+                                                      action:@selector(rnfvt_dismiss:)];
+
+  if ([doneButtonPosition isEqualToString:@"right"]) {
+    controller.navigationItem.rightBarButtonItem = buttonItem;
+  } else {
+    controller.navigationItem.leftBarButtonItem = buttonItem;
+  }
+
+  [presenter presentViewController:navigationController
+                          animated:YES
+                        completion:^{
+                          resolve(nil);
+                        }];
 }
-
-+ (UIViewController*)topViewControllerWithRootViewController:(UIViewController*)viewController {
-    if ([viewController isKindOfClass:[UITabBarController class]]) {
-        UITabBarController* tabBarController = (UITabBarController*)viewController;
-        return [self topViewControllerWithRootViewController:tabBarController.selectedViewController];
-    }
-    if ([viewController isKindOfClass:[UINavigationController class]]) {
-        UINavigationController* navContObj = (UINavigationController*)viewController;
-        return [self topViewControllerWithRootViewController:navContObj.visibleViewController];
-    }
-    if (viewController.presentedViewController && !viewController.presentedViewController.isBeingDismissed) {
-        UIViewController* presentedViewController = viewController.presentedViewController;
-        return [self topViewControllerWithRootViewController:presentedViewController];
-    }
-    for (UIView *view in [viewController.view subviews]) {
-        id subViewController = [view nextResponder];
-        if ( subViewController && [subViewController isKindOfClass:[UIViewController class]]) {
-            if ([(UIViewController *)subViewController presentedViewController]  && ![subViewController presentedViewController].isBeingDismissed) {
-                return [self topViewControllerWithRootViewController:[(UIViewController *)subViewController presentedViewController]];
-            }
-        }
-    }
-    return viewController;
-}
-
-- (void)previewControllerDidDismiss:(CustomQLViewController *)controller {
-    [self emitOnViewerDidDismiss];
-}
-
-- (void)dismissView:(id)sender {
-    [[FileViewerTurbo topViewController] dismissViewControllerAnimated:YES completion:nil];
-}
-
-RCT_EXPORT_MODULE(FileViewerTurbo)
-
-RCT_EXPORT_METHOD(open:(NSString *)path
-                  options:(JS::NativeFileViewerTurbo::Options &)options
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) {
-
-      UIBarButtonItem *buttonItem;
-      NSString *displayName = options.displayName();
-      NSString *doneButtonTitle = options.doneButtonTitle();
-      NSString *doneButtonPosition = options.doneButtonPosition();
-
-      File *file = [[File alloc] initWithPath:path title:displayName];
-
-      QLPreviewController *controller = [[CustomQLViewController alloc] initWithFile:file identifier:invocationId];
-
-      if (@available(iOS 13.0, *)) {
-          [controller setModalInPresentation: true];
-      }
-
-      controller.delegate = self;
-
-      UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:controller];
-
-      if (@available(iOS 13.0, *)) {
-          [navigationController setModalInPresentation: true];
-      }
-
-      if (doneButtonTitle) {
-        buttonItem = [[UIBarButtonItem alloc] initWithTitle:doneButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
-      } else {
-        buttonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismissView:)];
-      }
-
-      if ([doneButtonPosition isEqualToString: @"left"]) {
-        controller.navigationItem.leftBarButtonItem = buttonItem;
-      } else if ([doneButtonPosition isEqualToString: @"right"]) {
-        controller.navigationItem.rightBarButtonItem = buttonItem;
-      } else {
-        controller.navigationItem.leftBarButtonItem = buttonItem;
-      }
-
-      if ([QLPreviewController canPreviewItem:file]) {
-        [[FileViewerTurbo topViewController] presentViewController:navigationController animated:YES completion:^{
-          resolve(nil);
-        }];
-      } else {
-        reject(@"FileViewerTurbo:open", @"File not supported", nil);
-      }
-};
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-    return std::make_shared<facebook::react::NativeFileViewerTurboSpecJSI>(params);
+  return std::make_shared<facebook::react::NativeFileViewerTurboSpecJSI>(params);
 }
 
 @end
