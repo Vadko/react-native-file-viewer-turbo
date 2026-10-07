@@ -1,6 +1,6 @@
 {
   "name": "react-native-file-viewer-turbo",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "description": "Native file viewer for react-native - now with TurboModules support",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
